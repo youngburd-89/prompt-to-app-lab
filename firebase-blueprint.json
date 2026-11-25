@@ -1,0 +1,155 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user profile for Back Up app",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "Display name" },
+        "email": { "type": "string", "description": "Email address" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["userId", "displayName", "createdAt", "updatedAt"]
+    },
+    "PricingConfig": {
+      "title": "PricingConfig",
+      "description": "Admin configurable pricing engine rates for Back Up",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Operator user UID" },
+        "hourlyLaborRate": { "type": "number", "description": "Hourly labor rate per crew member" },
+        "packPackageFee": { "type": "number", "description": "Pack for You package fee" },
+        "movePackageFee": { "type": "number", "description": "Move for You package fee" },
+        "cleanPackageFee": { "type": "number", "description": "Moving Out Clean-Up package fee" },
+        "fullBundleFee": { "type": "number", "description": "Full bundle package fee" },
+        "mileageRate": { "type": "number", "description": "Per-mile rental truck rate" },
+        "cargoVanFee": { "type": "number", "description": "Just-in-time Cargo Van base rental fee" },
+        "truck15FtFee": { "type": "number", "description": "Just-in-time 15ft truck base rental fee" },
+        "truck20FtFee": { "type": "number", "description": "Just-in-time 20ft truck base rental fee" },
+        "truck26FtFee": { "type": "number", "description": "Just-in-time 26ft truck base rental fee" },
+        "suppliesBaseFee": { "type": "number", "description": "Base packing and cleaning supplies kit fee" },
+        "perBoxFee": { "type": "number", "description": "Price per box/supply bundle" },
+        "stairsFlightFee": { "type": "number", "description": "Fee per flight of stairs" },
+        "heavyItemFee": { "type": "number", "description": "Fee per heavy or bulky item" },
+        "highValueItemFee": { "type": "number", "description": "Handling fee per high-value item" },
+        "depositPercent": { "type": "integer", "description": "Upfront deposit percentage (default 30)" },
+        "fullValueRatePercent": { "type": "number", "description": "Full value protection rate % of declared value" },
+        "fullValueMinFee": { "type": "number", "description": "Minimum fee for Full Value Protection" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId", "hourlyLaborRate", "packPackageFee", "movePackageFee", "cleanPackageFee",
+        "fullBundleFee", "mileageRate", "cargoVanFee", "truck15FtFee", "truck20FtFee",
+        "truck26FtFee", "suppliesBaseFee", "perBoxFee", "stairsFlightFee", "heavyItemFee",
+        "highValueItemFee", "depositPercent", "fullValueRatePercent", "fullValueMinFee",
+        "createdAt", "updatedAt"
+      ]
+    },
+    "MoveBooking": {
+      "title": "MoveBooking",
+      "description": "Customer moving/packing/cleaning booking and crew dispatch job",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID" },
+        "customerName": { "type": "string", "description": "Customer name" },
+        "pickupAddress": { "type": "string", "description": "Pickup street address" },
+        "dropoffAddress": { "type": "string", "description": "Dropoff street address" },
+        "servicePackage": { "type": "string", "enum": ["PACK", "MOVE", "CLEAN", "FULL_BUNDLE"] },
+        "homeSize": { "type": "string", "enum": ["STUDIO", "1BR", "2BR", "3BR", "4BR_PLUS"] },
+        "squareFootage": { "type": "integer" },
+        "roomCount": { "type": "integer" },
+        "estimatedHours": { "type": "number" },
+        "crewSize": { "type": "integer" },
+        "mileage": { "type": "integer" },
+        "truckSize": { "type": "string", "enum": ["CARGO_VAN", "TRUCK_15FT", "TRUCK_20FT", "TRUCK_26FT"] },
+        "stairsFlights": { "type": "integer" },
+        "heavyItemCount": { "type": "integer" },
+        "highValueItemCount": { "type": "integer" },
+        "declaredItemValue": { "type": "number" },
+        "suppliesIncluded": { "type": "boolean" },
+        "boxCount": { "type": "integer" },
+        "valuationTier": { "type": "string", "enum": ["RELEASED_VALUE", "FULL_VALUE"] },
+        "overallRiskLevel": { "type": "string", "enum": ["LOW", "MODERATE", "ELEVATED"] },
+        "totalQuote": { "type": "number" },
+        "depositPercent": { "type": "integer" },
+        "depositAmount": { "type": "number" },
+        "finalBalanceAmount": { "type": "number" },
+        "depositPaid": { "type": "boolean" },
+        "finalBalancePaid": { "type": "boolean" },
+        "contractAccepted": { "type": "boolean" },
+        "contractSignerName": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["CONFIRMED", "EN_ROUTE", "ON_SITE_PRE_MOVE", "IN_PROGRESS", "AWAITING_FINAL_PAYMENT", "COMPLETED"]
+        },
+        "truckReserved": { "type": "boolean" },
+        "suppliesPacked": { "type": "boolean" },
+        "cleanKitReady": { "type": "boolean" },
+        "preMoveWalkthroughDone": { "type": "boolean" },
+        "crewNotes": { "type": "string" },
+        "aiSummary": { "type": "string" },
+        "completionSignOffName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId", "customerName", "pickupAddress", "dropoffAddress", "servicePackage",
+        "homeSize", "squareFootage", "roomCount", "estimatedHours", "crewSize", "mileage",
+        "truckSize", "stairsFlights", "heavyItemCount", "highValueItemCount", "declaredItemValue",
+        "suppliesIncluded", "boxCount", "valuationTier", "overallRiskLevel", "totalQuote",
+        "depositPercent", "depositAmount", "finalBalanceAmount", "depositPaid", "finalBalancePaid",
+        "contractAccepted", "contractSignerName", "status", "truckReserved", "suppliesPacked",
+        "cleanKitReady", "preMoveWalkthroughDone", "crewNotes", "aiSummary",
+        "completionSignOffName", "createdAt", "updatedAt"
+      ]
+    },
+    "ConditionRecordItem": {
+      "title": "ConditionRecordItem",
+      "description": "Pre-move condition record item from AI walkthrough or crew damage inspection",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "bookingId": { "type": "string" },
+        "itemName": { "type": "string" },
+        "roomName": { "type": "string" },
+        "category": { "type": "string", "enum": ["STANDARD", "FRAGILE", "HEAVY", "HIGH_VALUE"] },
+        "estimatedValueUsd": { "type": "integer" },
+        "riskLevel": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH"] },
+        "handlingNote": { "type": "string" },
+        "source": { "type": "string", "enum": ["AI_WALKTHROUGH", "CREW_PRE_MOVE", "DAMAGE_LOG"] },
+        "crewInspected": { "type": "boolean" },
+        "damageNoted": { "type": "boolean" },
+        "damageDescription": { "type": "string" },
+        "thumbnailBase64": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId", "bookingId", "itemName", "roomName", "category", "estimatedValueUsd",
+        "riskLevel", "handlingNote", "source", "crewInspected", "damageNoted",
+        "damageDescription", "createdAt", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Authenticated user profile"
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/PricingConfig" },
+      "description": "Operator configurable pricing rates"
+    },
+    "/users/{userId}/bookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/MoveBooking" },
+      "description": "User move bookings and crew dispatch state"
+    },
+    "/users/{userId}/bookings/{bookingId}/condition_items/{itemId}": {
+      "schema": { "$ref": "#/entities/ConditionRecordItem" },
+      "description": "Pre-move condition records and crew damage inspection logs"
+    }
+  }
+}

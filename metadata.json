@@ -1,0 +1,6 @@
+{
+  "name": "Back Up",
+  "description": "Call for Reinforcements! On-demand moving, packing, and move-out cleaning with AI walkthrough estimator, 30% deposit booking, crew dispatch, and pricing controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

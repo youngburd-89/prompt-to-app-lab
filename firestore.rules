@@ -1,0 +1,304 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        ('email' in request.auth.token &&
+         request.auth.token.email == 'youngramber1@gmail.com' &&
+         'email_verified' in request.auth.token &&
+         request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 120)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidPricingConfig(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.hourlyLaborRate is number && data.hourlyLaborRate >= 10 && data.hourlyLaborRate <= 500 &&
+             data.packPackageFee is number && data.packPackageFee >= 0 && data.packPackageFee <= 5000 &&
+             data.movePackageFee is number && data.movePackageFee >= 0 && data.movePackageFee <= 5000 &&
+             data.cleanPackageFee is number && data.cleanPackageFee >= 0 && data.cleanPackageFee <= 5000 &&
+             data.fullBundleFee is number && data.fullBundleFee >= 0 && data.fullBundleFee <= 10000 &&
+             data.mileageRate is number && data.mileageRate >= 0 && data.mileageRate <= 50 &&
+             data.cargoVanFee is number && data.cargoVanFee >= 0 && data.cargoVanFee <= 1000 &&
+             data.truck15FtFee is number && data.truck15FtFee >= 0 && data.truck15FtFee <= 1000 &&
+             data.truck20FtFee is number && data.truck20FtFee >= 0 && data.truck20FtFee <= 2000 &&
+             data.truck26FtFee is number && data.truck26FtFee >= 0 && data.truck26FtFee <= 2000 &&
+             data.suppliesBaseFee is number && data.suppliesBaseFee >= 0 && data.suppliesBaseFee <= 1000 &&
+             data.perBoxFee is number && data.perBoxFee >= 0 && data.perBoxFee <= 100 &&
+             data.stairsFlightFee is number && data.stairsFlightFee >= 0 && data.stairsFlightFee <= 500 &&
+             data.heavyItemFee is number && data.heavyItemFee >= 0 && data.heavyItemFee <= 1000 &&
+             data.highValueItemFee is number && data.highValueItemFee >= 0 && data.highValueItemFee <= 1000 &&
+             data.depositPercent is int && data.depositPercent >= 10 && data.depositPercent <= 80 &&
+             data.fullValueRatePercent is number && data.fullValueRatePercent >= 0 && data.fullValueRatePercent <= 10 &&
+             data.fullValueMinFee is number && data.fullValueMinFee >= 0 && data.fullValueMinFee <= 500 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidMoveBooking(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 100 &&
+             data.pickupAddress is string && data.pickupAddress.size() >= 1 && data.pickupAddress.size() <= 200 &&
+             data.dropoffAddress is string && data.dropoffAddress.size() >= 1 && data.dropoffAddress.size() <= 200 &&
+             data.servicePackage in ['PACK', 'MOVE', 'CLEAN', 'FULL_BUNDLE'] &&
+             data.homeSize in ['STUDIO', '1BR', '2BR', '3BR', '4BR_PLUS'] &&
+             data.squareFootage is int && data.squareFootage >= 100 && data.squareFootage <= 20000 &&
+             data.roomCount is int && data.roomCount >= 1 && data.roomCount <= 30 &&
+             data.estimatedHours is number && data.estimatedHours >= 1 && data.estimatedHours <= 100 &&
+             data.crewSize is int && data.crewSize >= 2 && data.crewSize <= 10 &&
+             data.mileage is int && data.mileage >= 0 && data.mileage <= 3000 &&
+             data.truckSize in ['CARGO_VAN', 'TRUCK_15FT', 'TRUCK_20FT', 'TRUCK_26FT'] &&
+             data.stairsFlights is int && data.stairsFlights >= 0 && data.stairsFlights <= 30 &&
+             data.heavyItemCount is int && data.heavyItemCount >= 0 && data.heavyItemCount <= 50 &&
+             data.highValueItemCount is int && data.highValueItemCount >= 0 && data.highValueItemCount <= 50 &&
+             data.declaredItemValue is number && data.declaredItemValue >= 0 && data.declaredItemValue <= 1000000 &&
+             data.suppliesIncluded is bool &&
+             data.boxCount is int && data.boxCount >= 0 && data.boxCount <= 500 &&
+             data.valuationTier in ['RELEASED_VALUE', 'FULL_VALUE'] &&
+             data.overallRiskLevel in ['LOW', 'MODERATE', 'ELEVATED'] &&
+             data.totalQuote is number && data.totalQuote >= 0 && data.totalQuote <= 500000 &&
+             data.depositPercent is int && data.depositPercent >= 10 && data.depositPercent <= 80 &&
+             data.depositAmount is number && data.depositAmount >= 0 && data.depositAmount <= 500000 &&
+             data.finalBalanceAmount is number && data.finalBalanceAmount >= 0 && data.finalBalanceAmount <= 500000 &&
+             data.depositPaid is bool &&
+             data.finalBalancePaid is bool &&
+             data.contractAccepted is bool &&
+             data.contractSignerName is string && data.contractSignerName.size() <= 100 &&
+             data.status in ['CONFIRMED', 'EN_ROUTE', 'ON_SITE_PRE_MOVE', 'IN_PROGRESS', 'AWAITING_FINAL_PAYMENT', 'COMPLETED'] &&
+             data.truckReserved is bool &&
+             data.suppliesPacked is bool &&
+             data.cleanKitReady is bool &&
+             data.preMoveWalkthroughDone is bool &&
+             data.crewNotes is string && data.crewNotes.size() <= 1000 &&
+             data.aiSummary is string && data.aiSummary.size() <= 1500 &&
+             data.completionSignOffName is string && data.completionSignOffName.size() <= 100 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidConditionRecordItem(data, userId, bookingId) {
+      return data.userId is string && data.userId == userId &&
+             data.bookingId is string && data.bookingId == bookingId &&
+             data.itemName is string && data.itemName.size() >= 1 && data.itemName.size() <= 120 &&
+             data.roomName is string && data.roomName.size() >= 1 && data.roomName.size() <= 80 &&
+             data.category in ['STANDARD', 'FRAGILE', 'HEAVY', 'HIGH_VALUE'] &&
+             data.estimatedValueUsd is int && data.estimatedValueUsd >= 0 && data.estimatedValueUsd <= 1000000 &&
+             data.riskLevel in ['LOW', 'MEDIUM', 'HIGH'] &&
+             data.handlingNote is string && data.handlingNote.size() <= 500 &&
+             data.source in ['AI_WALKTHROUGH', 'CREW_PRE_MOVE', 'DAMAGE_LOG'] &&
+             data.crewInspected is bool &&
+             data.damageNoted is bool &&
+             data.damageDescription is string && data.damageDescription.size() <= 500 &&
+             (!('thumbnailBase64' in data) || (data.thumbnailBase64 is string && data.thumbnailBase64.size() <= 120000)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && request.auth.uid == adminId;
+      allow list, write: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'updatedAt']);
+
+      allow delete: if false;
+
+      match /settings/{settingId} {
+        allow get: if (isOwner(userId) || isAdmin()) && isValidId(settingId);
+        allow list: if isOwner(userId) || isAdmin();
+
+        allow create: if (isOwner(userId) || isAdmin()) &&
+                         isValidId(settingId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'hourlyLaborRate', 'packPackageFee', 'movePackageFee',
+                           'cleanPackageFee', 'fullBundleFee', 'mileageRate', 'cargoVanFee',
+                           'truck15FtFee', 'truck20FtFee', 'truck26FtFee', 'suppliesBaseFee',
+                           'perBoxFee', 'stairsFlightFee', 'heavyItemFee', 'highValueItemFee',
+                           'depositPercent', 'fullValueRatePercent', 'fullValueMinFee',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'hourlyLaborRate', 'packPackageFee', 'movePackageFee',
+                           'cleanPackageFee', 'fullBundleFee', 'mileageRate', 'cargoVanFee',
+                           'truck15FtFee', 'truck20FtFee', 'truck26FtFee', 'suppliesBaseFee',
+                           'perBoxFee', 'stairsFlightFee', 'heavyItemFee', 'highValueItemFee',
+                           'depositPercent', 'fullValueRatePercent', 'fullValueMinFee',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidPricingConfig(incoming(), userId);
+
+        allow update: if (isOwner(userId) || isAdmin()) &&
+                         isValidId(settingId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidPricingConfig(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'hourlyLaborRate', 'packPackageFee', 'movePackageFee',
+                           'cleanPackageFee', 'fullBundleFee', 'mileageRate', 'cargoVanFee',
+                           'truck15FtFee', 'truck20FtFee', 'truck26FtFee', 'suppliesBaseFee',
+                           'perBoxFee', 'stairsFlightFee', 'heavyItemFee', 'highValueItemFee',
+                           'depositPercent', 'fullValueRatePercent', 'fullValueMinFee',
+                           'updatedAt'
+                         ]);
+
+        allow delete: if false;
+      }
+
+      match /bookings/{bookingId} {
+        allow get: if (isOwner(userId) || isAdmin()) && isValidId(bookingId);
+        allow list: if isOwner(userId) || isAdmin();
+
+        allow create: if isOwner(userId) &&
+                         isValidId(bookingId) &&
+                         incoming().depositPaid == true &&
+                         incoming().contractAccepted == true &&
+                         incoming().contractSignerName.size() >= 1 &&
+                         incoming().finalBalancePaid == false &&
+                         incoming().status == 'CONFIRMED' &&
+                         incoming().keys().hasAll([
+                           'userId', 'customerName', 'pickupAddress', 'dropoffAddress', 'servicePackage',
+                           'homeSize', 'squareFootage', 'roomCount', 'estimatedHours', 'crewSize',
+                           'mileage', 'truckSize', 'stairsFlights', 'heavyItemCount',
+                           'highValueItemCount', 'declaredItemValue', 'suppliesIncluded', 'boxCount',
+                           'valuationTier', 'overallRiskLevel', 'totalQuote', 'depositPercent',
+                           'depositAmount', 'finalBalanceAmount', 'depositPaid', 'finalBalancePaid',
+                           'contractAccepted', 'contractSignerName', 'status', 'truckReserved',
+                           'suppliesPacked', 'cleanKitReady', 'preMoveWalkthroughDone', 'crewNotes',
+                           'aiSummary', 'completionSignOffName', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'customerName', 'pickupAddress', 'dropoffAddress', 'servicePackage',
+                           'homeSize', 'squareFootage', 'roomCount', 'estimatedHours', 'crewSize',
+                           'mileage', 'truckSize', 'stairsFlights', 'heavyItemCount',
+                           'highValueItemCount', 'declaredItemValue', 'suppliesIncluded', 'boxCount',
+                           'valuationTier', 'overallRiskLevel', 'totalQuote', 'depositPercent',
+                           'depositAmount', 'finalBalanceAmount', 'depositPaid', 'finalBalancePaid',
+                           'contractAccepted', 'contractSignerName', 'status', 'truckReserved',
+                           'suppliesPacked', 'cleanKitReady', 'preMoveWalkthroughDone', 'crewNotes',
+                           'aiSummary', 'completionSignOffName', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidMoveBooking(incoming(), userId);
+
+        allow update: if (isOwner(userId) || isAdmin()) &&
+                         isValidId(bookingId) &&
+                         isValidMoveBooking(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         (
+                           isAdmin() ||
+                           (
+                             existing().status != 'COMPLETED' && (
+                               // Action: Crew dispatch checklist, status updates, and sign-off
+                               (
+                                 incoming().diff(existing()).affectedKeys().hasOnly([
+                                   'status', 'truckReserved', 'suppliesPacked', 'cleanKitReady',
+                                   'preMoveWalkthroughDone', 'crewNotes', 'completionSignOffName', 'updatedAt'
+                                 ]) &&
+                                 incoming().status in ['CONFIRMED', 'EN_ROUTE', 'ON_SITE_PRE_MOVE', 'IN_PROGRESS', 'AWAITING_FINAL_PAYMENT']
+                               ) ||
+                               // Action: Final 70% balance collection upon completion
+                               (
+                                 existing().depositPaid == true &&
+                                 existing().finalBalancePaid == false &&
+                                 incoming().finalBalancePaid == true &&
+                                 incoming().status == 'COMPLETED' &&
+                                 incoming().diff(existing()).affectedKeys().hasOnly([
+                                   'finalBalancePaid', 'status', 'completionSignOffName', 'updatedAt'
+                                 ])
+                               )
+                             )
+                           )
+                         );
+
+        allow delete: if false;
+
+        match /condition_items/{itemId} {
+          allow get: if (isOwner(userId) || isAdmin()) && isValidId(bookingId) && isValidId(itemId);
+          allow list: if (isOwner(userId) || isAdmin()) && isValidId(bookingId);
+
+          allow create: if (isOwner(userId) || isAdmin()) &&
+                           isValidId(bookingId) &&
+                           isValidId(itemId) &&
+                           incoming().keys().hasAll([
+                             'userId', 'bookingId', 'itemName', 'roomName', 'category',
+                             'estimatedValueUsd', 'riskLevel', 'handlingNote', 'source',
+                             'crewInspected', 'damageNoted', 'damageDescription',
+                             'createdAt', 'updatedAt'
+                           ]) &&
+                           incoming().keys().hasOnly([
+                             'userId', 'bookingId', 'itemName', 'roomName', 'category',
+                             'estimatedValueUsd', 'riskLevel', 'handlingNote', 'source',
+                             'crewInspected', 'damageNoted', 'damageDescription',
+                             'thumbnailBase64', 'createdAt', 'updatedAt'
+                           ]) &&
+                           isValidConditionRecordItem(incoming(), userId, bookingId);
+
+          allow update: if (isOwner(userId) || isAdmin()) &&
+                           isValidId(bookingId) &&
+                           isValidId(itemId) &&
+                           incoming().userId == existing().userId &&
+                           incoming().bookingId == existing().bookingId &&
+                           incoming().createdAt == existing().createdAt &&
+                           isValidConditionRecordItem(incoming(), userId, bookingId) &&
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'crewInspected', 'damageNoted', 'damageDescription',
+                             'handlingNote', 'riskLevel', 'updatedAt'
+                           ]);
+
+          allow delete: if false;
+        }
+      }
+    }
+  }
+}
